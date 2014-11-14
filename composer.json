@@ -1,0 +1,22 @@
+{
+    "name": "squinones14/topsort",
+    "description": "Topological Sort",
+    "require-dev": {
+        "phpunit/phpunit": "~4.3"
+    },
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "Squinones\\TopSort\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Samantha Quiñones",
+            "email": "samantha@tembies.com"
+        }
+    ],
+    "require": {
+        "mockery/mockery": "~0.9"
+    }
+}
