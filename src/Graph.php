@@ -18,6 +18,14 @@ class Graph
 	private $nodes;
 
 	/**
+	 * @return Node[]
+	 */
+	public function getNodes()
+	{
+		return $this->nodes;
+	}
+
+	/**
 	 * @var Node[]
 	 */
 	private $sorted=[];
