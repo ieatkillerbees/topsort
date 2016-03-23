@@ -1,91 +1,93 @@
 <?php
+declare(strict_types = 1);
 
 namespace Squinones\TopSort;
 
 /**
  * Class Graph
+ *
+ * Implements a sortable directed acyclic graph
+ *
  * @package Squinones\TopSort
  */
 class Graph
 {
 	/**
-	 * @var array
+	 * @var Node[]
 	 */
 	private $nodes;
 
 	/**
-	 * @param array $nodes
-	 * @return Graph
+	 * @var Node[]
 	 */
-	public static function create(array $nodes = []) {
-		return new self($nodes);
+	private $sorted=[];
+
+	/**
+	 * Sorts the graph using recursive depth-first search
+	 *
+	 * @return array
+	 */
+	public function sort(): array
+	{
+		$this->sorted = [];
+		$unmarked = $this->getUnmarked();
+		while (count($unmarked) > 0) {
+			/** @var Node $node */
+			$node = array_shift($unmarked);
+			$this->visit($node);
+		}
+		return $this->sorted;
 	}
 
 	/**
-	 * @param array $nodes
+	 * Add a node to the graph
+	 *
+	 * @param Node $node
 	 */
-	public function __construct(array $nodes = [])
+	public function addNode(Node $node)
 	{
-		$this->nodes = $nodes;
+		$this->nodes[] = $node;
 	}
 
 	/**
-	 * @param $node
-	 * @param null $edge
+	 * Return an array of all unmarked nodes
+	 *
+	 * @return Node[]
 	 */
-	public function addNode($node, $edge = null)
+	private function getUnmarked(): array
 	{
-		$this->nodes[] = is_null($edge) ? $node : [$edge, $node];
+		return array_filter($this->nodes, function (Node $node) { return !$node->isMarked(); });
 	}
 
 	/**
-	 * @param array $nodes
+	 * Visit a node in the graph and sort its parents recursively
+	 *
+	 * @param Node $n
 	 */
-	public function setNodes(array $nodes)
+	private function visit(Node $n)
 	{
-		$this->nodes = $nodes;
+		if ($n->isMarked()) {
+			throw new CyclicNodeException("Cyclic node found. Not a DAG");
+		}
+
+		$n->setMarked(true);
+		foreach ($n->getParents() as $m) {
+			$this->visit($m);
+		}
+		$n->setMarked(false);
+		$n->setVisited(true);
+
+		if (!in_array($n, $this->sorted)) {
+			array_push($this->sorted, $n);
+		}
 	}
 
 	/**
 	 * @return array
 	 */
-	public function getNodes()
+	public function toArray()
 	{
-		return $this->nodes;
+		$this->sort();
+		return array_map(function (Node $node) { return $node->getName(); }, $this->sorted);
 	}
-
-	/**
-	 * @return array
-	 */
-	public function sort()
-	{
-		$unsorted = $sorted = [];
-		$nodes = $this->getNodes();
-
-		// Remove any non-edged nodes to the unsorted list. If there are no nodes without edges, please check your
-		// local reality for cracks.
-		for ($i=count($this->nodes)-1; $i>=0; $i--) {
-			if (!is_array($this->nodes[$i])) {
-				array_push($unsorted, array_splice($this->nodes, $i, 1)[0]);
-			}
-		}
-
-		// While there are unsorted elements
-		while(count($unsorted)) {
-
-			// pull the first and push it on to the sorted list
-			$n = array_shift($unsorted);
-			array_push($sorted, $n);
-
-			// loop backwards through remaining contexts
-			for ($i=count($this->nodes)-1; $i>=0; $i--) {
-				// move elements whose incoming edge nodes have been moved to sorted to the unsorted list
-				if(is_array($this->nodes[$i]) && $this->nodes[$i][0] === $n) {
-					array_push($unsorted, array_splice($this->nodes, $i, 1)[0][1]);
-				}
-			}
-		}
-		return array_keys(array_flip($sorted));
-	}
-
 }

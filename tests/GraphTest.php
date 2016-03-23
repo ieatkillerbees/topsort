@@ -1,67 +1,40 @@
 <?php
 
-namespace Squinones\TopSort\Tests;
-use Squinones\TopSort\Graph;
 
-/**
- * Class ContextResolverTest
- * @group actions
- */
+namespace Squinones\TopSort\Tests;
+
+
+use Squinones\TopSort\Graph;
+use Squinones\TopSort\Node;
+
 class GraphTest extends \PHPUnit_Framework_TestCase
 {
-
 	/**
-	 * @dataProvider dagProvider
-	 * @param $data
+	 * @dataProvider graphProvider
+	 * @param Node[] $nodes
 	 */
-	public function testTopSortWithStaticConstruction($data)
+	public function testSort($nodes, $expectedSort)
 	{
-		list($input, $expected) = $data;
-		$sort = Graph::create($input);
-		$this->assertEquals($expected, $sort->sort());
+		$graph  = new Graph();
+		foreach ($nodes as $node) {
+			$graph->addNode($node);
+		}
+		$this->assertEquals($expectedSort, $graph->sort());
 	}
 
-	/**
-	 * @dataProvider dagProvider
-	 * @param $data
-	 */
-	public function testTopoSort($data)
+	public function graphProvider()
 	{
-		list($input, $expected) = $data;
-		$sort = new Graph($input);
-		$this->assertEquals($expected, $sort->sort());
-	}
-
-	/**
-	 * @return array
-	 */
-	public function dagProvider()
-	{
+		$root = new Node('root');
+		$child1 = new Node('child1', [$root]);
+		$child2 = new Node('child2', [$root]);
+		$childA = new Node('childA', [$child1]);
+		$extern = new Node('extern');
+		$childB = new Node('childB', [$childA, $child2, $extern]);
 		return [
-			[[
-				['apple', ['apple', 'banana'], ['apple', 'grape'], ['grape', 'tomato'], 'onion', 'pear', ['onion', 'shallot'], ['onion', 'eggplant'], ['eggplant', 'tomato'], 'tomato'],
-				['tomato', 'pear', 'onion', 'apple', 'eggplant', 'shallot', 'grape', 'banana']
-			]],
-			[[
-				['apple', ['apple', 'banana'], ['banana', 'grape'], ['grape', 'tomato'], 'onion', 'pear', ['onion', 'shallot'], ['shallot', 'eggplant'], ['eggplant', 'tomato'], 'tomato'],
-				['tomato', 'pear', 'onion', 'apple', 'shallot', 'banana', 'eggplant', 'grape']
-			]],
-			[[
-				[
-					['PrepareCookieSheet', 'BakeCookies'],
-					['PreheatOven', 'BakeCookies'],
-					['MixIngredients', 'BakeCookies'],
-					['PrepareUtensils', 'PrepareCookieSheet'],
-					['PrepareUtensils', 'PreheatOven'],
-					['PrepareUtensils', 'MixIngredients'],
-					['BuyIngredients', 'MixIngredients'],
-					'PrepareUtensils',
-					'BuyIngredients'
-				],
-				['BuyIngredients', 'PrepareUtensils', 'MixIngredients', 'PreheatOven', 'PrepareCookieSheet', 'BakeCookies']
-			]]
-
+			[
+				[ $childB, $extern, $root, $childA, $child2, $child1 ],
+				[ $root, $child1, $childA, $child2, $extern, $childB ],
+			],
 		];
 	}
 }
- 
