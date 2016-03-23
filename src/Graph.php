@@ -40,6 +40,16 @@ class Graph
 	}
 
 	/**
+	 * @param string $name
+	 * @param array $parents
+	 * @return Node
+	 */
+	public function createNode(string $name, array $parents = []): Node
+	{
+		return new Node($name, $parents);
+	}
+
+	/**
 	 * Add a node to the graph
 	 *
 	 * @param Node $node
